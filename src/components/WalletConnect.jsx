@@ -19,7 +19,7 @@ export default function WalletConnect({ wallet, onConnect, onDisconnect }) {
 
     return (
         <button className="btn-wallet" onClick={onConnect}>
-            🔗 Connect Wallet
+            Connect Wallet
         </button>
     );
 }

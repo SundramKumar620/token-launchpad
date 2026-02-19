@@ -60,7 +60,7 @@ export default function App() {
             {/* Header */}
             <header className="header">
                 <div className="header-logo">
-                    <div className="icon">🪙</div>
+                    <img src="logo.png" alt="logo" className='logo'/>
                     <h1>Token Launchpad</h1>
                     <span className="header-badge">DEVNET</span>
                 </div>

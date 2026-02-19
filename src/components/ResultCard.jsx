@@ -8,7 +8,7 @@ export default function ResultCard({ mintAddress }) {
             <h3>✅ Token Created Successfully!</h3>
             <div className="mint-address">{mintAddress}</div>
             <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
-                View on Solana Explorer ↗
+                View on Solana Explorer
             </a>
         </div>
     );

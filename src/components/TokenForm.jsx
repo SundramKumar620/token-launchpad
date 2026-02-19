@@ -107,7 +107,7 @@ export default function TokenForm({ disabled, loading, onSubmit }) {
                 className={`btn-create ${loading ? 'loading' : ''}`}
                 disabled={disabled || loading}
             >
-                {loading ? 'Creating...' : '🚀 Create Token'}
+                {loading ? 'Creating...' : 'Create Token'}
             </button>
         </form>
     );
