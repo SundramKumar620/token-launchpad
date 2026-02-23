@@ -1,4 +1,4 @@
-# 🪙 Solana Token Launchpad
+# Solana Token Launchpad
 
 <img width="1440" height="1024" alt="V2 Cominggain" src="https://github.com/user-attachments/assets/c6465da9-e65f-43eb-858e-4261946a87cf" />
 
@@ -47,3 +47,4 @@ Open `http://localhost:5173` in your browser.
 ## License
 
 MIT
+
