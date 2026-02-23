@@ -24,19 +24,7 @@ import {
 } from '@solana/spl-token-metadata';
 import { connection, getProvider } from './wallet.js';
 
-/**
- * Create a Token-2022 token with embedded metadata.
- *
- * @param {object}  opts
- * @param {string}  opts.name        Token name
- * @param {string}  opts.symbol      Token symbol
- * @param {number}  opts.decimals    Decimals (0-9)
- * @param {number}  opts.supply      Initial supply (in whole tokens)
- * @param {string}  opts.imageUri    URI for token image
- * @param {string}  opts.description Token description
- * @param {(s: string) => void} opts.onStatus  Status callback
- * @returns {Promise<string>} The mint address
- */
+
 export async function createToken({
     name,
     symbol,
@@ -51,14 +39,12 @@ export async function createToken({
         throw new Error('Wallet not connected');
     }
 
-    // Re-create payer as our own PublicKey to avoid version mismatch
     const payer = new PublicKey(provider.publicKey.toBase58());
     const mintKeypair = Keypair.generate();
     const mint = mintKeypair.publicKey;
 
     onStatus?.('Preparing token metadata...');
 
-    // -- Build metadata for space calculation --
     const metadata = {
         mint: mint,
         name: name,
@@ -67,7 +53,6 @@ export async function createToken({
         additionalMetadata: description ? [['description', description]] : [],
     };
 
-    // -- Calculate space: mint + metadata pointer + TLV header + metadata --
     const mintLen = getMintLen([ExtensionType.MetadataPointer]);
     const metadataLen = TYPE_SIZE + LENGTH_SIZE + pack(metadata).length;
     const totalLen = mintLen + metadataLen;
@@ -76,10 +61,8 @@ export async function createToken({
 
     onStatus?.('Building transaction...');
 
-    // -- Instructions --
     const tx = new Transaction();
 
-    // 1) Create the mint account
     tx.add(
         SystemProgram.createAccount({
             fromPubkey: payer,
@@ -90,28 +73,26 @@ export async function createToken({
         })
     );
 
-    // 2) Initialize metadata pointer (points to itself)
+
     tx.add(
         createInitializeMetadataPointerInstruction(
             mint,
             payer,
-            mint, // metadata address = mint itself
+            mint, 
             TOKEN_2022_PROGRAM_ID
         )
     );
 
-    // 3) Initialize the mint
     tx.add(
         createInitializeMintInstruction(
             mint,
             decimals,
-            payer,         // mint authority
-            payer,         // freeze authority
+            payer,         
+            payer,        
             TOKEN_2022_PROGRAM_ID
         )
     );
 
-    // 4) Initialize token metadata on the mint
     tx.add(
         createInitializeInstruction({
             programId: TOKEN_2022_PROGRAM_ID,
@@ -125,7 +106,6 @@ export async function createToken({
         })
     );
 
-    // 5) Add description as an additional metadata field
     if (description) {
         tx.add(
             createUpdateFieldInstruction({
@@ -138,7 +118,6 @@ export async function createToken({
         );
     }
 
-    // 6) Create associated token account
     const ata = getAssociatedTokenAddressSync(
         mint,
         payer,
@@ -158,7 +137,6 @@ export async function createToken({
         )
     );
 
-    // 7) Mint initial supply
     const adjustedSupply = BigInt(supply) * BigInt(10 ** decimals);
     tx.add(
         createMintToInstruction(
@@ -171,27 +149,21 @@ export async function createToken({
         )
     );
 
-    // -- Send transaction --
     onStatus?.('Waiting for wallet approval...');
 
-    const { blockhash, lastValidBlockHeight } =
-        await connection.getLatestBlockhash();
+    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
     tx.recentBlockhash = blockhash;
     tx.lastValidBlockHeight = lastValidBlockHeight;
     tx.feePayer = payer;
 
-    // The mint keypair must partially sign
     tx.partialSign(mintKeypair);
 
-    // Let the wallet sign + send
     const signed = await provider.signTransaction(tx);
     const signature = await connection.sendRawTransaction(signed.serialize());
 
     onStatus?.('Confirming transaction...');
-    await connection.confirmTransaction(
-        { signature, blockhash, lastValidBlockHeight },
-        'confirmed'
-    );
+
+    await connection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'confirmed');
 
     return mint.toBase58();
 }
